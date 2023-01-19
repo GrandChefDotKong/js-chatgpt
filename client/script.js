@@ -8,10 +8,10 @@ let loadInterval;
 
 function loader(element) {
   element.textContent = '';
-  const loadInterval = setInterval(() => {
+  loadInterval = setInterval(() => {
     element.textContent +=  '.';
 
-    if(element.textContent.length > 3) {
+    if(element.textContent === '....') {
       element.textContent =  '';  
     }
   }, 300)
@@ -21,13 +21,13 @@ function typeText(element, text) {
   let index = 0;
 
   let interval = setInterval(() => {
-    if(index > text.length) {
-      clearInterval(interval);
-      return;
-    }
+    if(index < text.length) {
+      element.innerHTML += text.charAt(index);
+      index++;
 
-    element.innnerHTML += text.charAt(index);
-    index++;
+    } else {
+      clearInterval(interval);
+    }
 
   }, 20)
 }
@@ -75,6 +75,31 @@ const handleSubmit = async(e) => {
 
   loader(messageDiv);
 
+  const response = await fetch('http://localhost:5000', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',    
+    },
+    body: JSON.stringify({
+      prompt: data.get('prompt')
+    })
+  })
+
+  clearInterval(loadInterval);
+  messageDiv.innerHTML = "";
+
+  if(response.ok) {
+    const data = await response.json();
+    const parsedData = data.bot.trim();
+
+    typeText(messageDiv, parsedData);
+
+  } else {
+    const error = await response.text();
+
+    messageDiv.innerHTML = 'Something went wrong ...';
+    alert(error);
+  }
 }
 
 form.addEventListener('submit', handleSubmit);
